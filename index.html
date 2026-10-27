@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Números e Letras do Pedro</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:860px;margin:20px auto;padding:0 16px;background:#fffbe8;color:#222}
+h1{margin:0 0 12px}
+input{font-size:28px;width:100%;padding:10px;box-sizing:border-box;border:3px solid #333;border-radius:10px}
+button{font-size:22px;padding:10px 16px;margin:8px 8px 0 0;border:3px solid #333;border-radius:10px;background:#ffd23f;cursor:pointer;font-weight:bold}
+button:hover{background:#ffb703}
+#out{margin-top:16px;font-size:24px;white-space:pre-wrap;word-break:break-all;background:#fff;border:3px solid #333;border-radius:10px;padding:12px;min-height:60px}
+#lista{font-size:18px;max-height:340px;overflow:auto;margin-top:10px;background:#f4f4f4;padding:8px;border-radius:8px}
+small{color:#555}
+
+textarea{font-size:22px;width:100%;height:160px;padding:10px;box-sizing:border-box;border:3px solid #333;border-radius:10px;font-family:inherit}
+table{border-collapse:collapse;font-size:22px;margin-top:10px}
+td,th{border:2px solid #333;padding:4px 12px;text-align:left}
+.barra{display:inline-block;height:16px;background:#ffb703;vertical-align:middle;margin-left:8px;border-radius:4px}
+label{font-size:18px;margin-right:14px}
+.abas button{background:#fff}.abas button.on{background:#ffd23f}
+</style></head><body>
+<h1>PEDRO</h1><div class="abas"><button id="bN" class="on" onclick="aba('N')">NÚMEROS</button><button id="bL" onclick="aba('L')">LETRAS</button></div><div id="tN">
+<input id="n" placeholder="Digite um número ou conta: 700586587332405847130112  ou  303831*8*8/4" autofocus>
+<button onclick="primo()">É PRIMO?</button>
+<button onclick="divisores()">TODOS OS DIVISORES</button>
+<button onclick="conta()">CONTA =</button>
+<button onclick="baixar()">BAIXAR .TXT</button>
+<div id="out"></div>
+<div id="lista" hidden></div>
+<small>Aceita + − * / ^ e parênteses. Funciona com números enormes. Não precisa de internet.</small>
+</div><div id="tL" hidden>
+<textarea id="lt" placeholder="Cole ou escreva o texto aqui..."></textarea>
+<div><label><input type="checkbox" id="lac" onchange="letras()"> separar letras com acento (Ã ≠ A)</label>
+<label><input type="checkbox" id="lz" onchange="letras()"> mostrar letras com zero</label>
+<label><input type="checkbox" id="lord" onchange="letras()"> ordenar por quantidade</label></div>
+<button onclick="letras()">QUANTAS LETRAS TEM DE CADA?</button>
+<div id="lout" style="margin-top:16px"></div>
+</div><script>
+let ultimo=[], ultimoN=null;
+const mod=(a,b)=>((a%b)+b)%b;
+function pw(b,e,m){let r=1n;b%=m;while(e>0n){if(e&1n)r=r*b%m;b=b*b%m;e>>=1n}return r}
+function gcd(a,b){while(b){[a,b]=[b,a%b]}return a<0n?-a:a}
+const PEQ=[2n,3n,5n,7n,11n,13n,17n,19n,23n,29n,31n,37n,41n];
+function ehPrimo(n){
+  if(n<2n)return false;
+  for(const p of PEQ){if(n===p)return true;if(n%p===0n)return false}
+  let d=n-1n,s=0;while(d%2n===0n){d/=2n;s++}
+  for(const a of PEQ){
+    let x=pw(a,d,n);if(x===1n||x===n-1n)continue;
+    let ok=false;for(let i=1;i<s;i++){x=x*x%n;if(x===n-1n){ok=true;break}}
+    if(!ok)return false}
+  return true}
+function rho(n){
+  if(n%2n===0n)return 2n;
+  for(let c=1n;;c++){
+    let x=2n,y=2n,d=1n;const f=v=>(v*v+c)%n;
+    while(d===1n){x=f(x);y=f(f(y));d=gcd(x-y,n)}
+    if(d!==n)return d}}
+function fatora(n){
+  const f=new Map(),add=(p,k=1)=>f.set(p,(f.get(p)||0)+k);
+  for(let p=2n;p<1000000n&&p*p<=n;p+=(p===2n?1n:2n)){while(n%p===0n){add(p);n/=p}}
+  const pilha=[n>1n?n:null];
+  while(pilha.length){
+    const m=pilha.pop();if(!m)continue;
+    if(m<1000000n*1000000n&&m>1n&&f.size>=0&&m<1000000n){add(m);continue}
+    if(ehPrimo(m)){add(m);continue}
+    const d=rho(m);pilha.push(d,m/d)}
+  return new Map([...f].sort((a,b)=>a[0]<b[0]?-1:1))}
+function mostraFat(f){return [...f].map(([p,e])=>e>1?p+"^"+e:""+p).join(" × ")}
+function lerN(){
+  const t=document.getElementById('n').value.replace(/[\s.]/g,'');
+  if(!/^\d+$/.test(t)){out("Digite só o número (sem conta) para esse botão.");return null}
+  return BigInt(t)}
+function out(t){document.getElementById('out').textContent=t}
+function primo(){
+  const n=lerN();if(n===null)return;
+  if(n<2n){out(n+" NÃO é primo.");return}
+  if(ehPrimo(n)){out(n+" É UM NÚMERO PRIMO.");return}
+  const f=fatora(n);out(n+" NÃO é primo.\n"+n+" = "+mostraFat(f))}
+function divisores(){
+  const n=lerN();if(n===null)return;
+  if(n<1n){out("Use um número maior que 0.");return}
+  const f=fatora(n);let tot=1n;for(const [,e] of f)tot*=BigInt(e+1);
+  if(tot>2000000n){out(n+" = "+mostraFat(f)+"\nTem "+tot+" divisores: grande demais.");return}
+  let d=[1n];for(const [p,e] of f){const nd=[];for(const x of d){let q=x;for(let k=0;k<=e;k++){nd.push(q);q*=p}}d=nd}
+  d.sort((a,b)=>a<b?-1:a>b?1:0);ultimo=d;ultimoN=n;
+  out(n+" = "+(n===1n?"1":mostraFat(f))+"\n"+d.length+" divisores");
+  const L=document.getElementById('lista');L.hidden=false;
+  L.textContent=d.slice(0,2000).join("\n")+(d.length>2000?"\n... (baixe o .txt para ver todos)":"")}
+function baixar(){
+  if(!ultimo.length){out("Primeiro clique em TODOS OS DIVISORES.");return}
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([ultimo.join("\n")+"\n"],{type:"text/plain"}));
+  a.download="divisores_"+ultimoN+".txt";a.click()}
+// calculadora com frações exatas
+function conta(){
+  const s=document.getElementById('n').value.replace(/[x×]/g,'*').replace(/÷/g,'/').replace(/\^/g,'**').replace(/[\s.]/g,'');
+  let i=0;
+  const peek=()=>s[i];
+  function num(){
+    if(peek()==='('){i++;const v=soma();if(peek()!==')')throw 0;i++;return v}
+    if(peek()==='-'){i++;const v=num();return [-v[0],v[1]]}
+    const m=/^\d+/.exec(s.slice(i));if(!m)throw 0;i+=m[0].length;return [BigInt(m[0]),1n]}
+  function pot(){let b=num();if(s.slice(i,i+2)==='**'){i+=2;const e=pot();if(e[1]!==1n||e[0]<0n)throw 0;return [b[0]**e[0],b[1]**e[0]]}return b}
+  function prod(){let a=pot();while(peek()==='*'&&s[i+1]!=='*'||peek()==='/'){const o=s[i++];const b=pot();
+    if(o==='*')a=[a[0]*b[0],a[1]*b[1]];else{if(b[0]===0n)throw 1;a=[a[0]*b[1],a[1]*b[0]]}
+    if(a[1]<0n)a=[-a[0],-a[1]];const g=gcd(a[0],a[1]);a=[a[0]/g,a[1]/g]}return a}
+  function soma(){let a=prod();while(peek()==='+'||peek()==='-'){const o=s[i++];const b=prod();
+    a=o==='+'?[a[0]*b[1]+b[0]*a[1],a[1]*b[1]]:[a[0]*b[1]-b[0]*a[1],a[1]*b[1]];
+    const g=gcd(a[0],a[1]);a=[a[0]/g,a[1]/g]}return a}
+  try{
+    const r=soma();if(i!==s.length)throw 0;
+    if(r[1]===1n){out(r[0].toString());document.getElementById('n').value=r[0].toString();return}
+    const neg=r[0]<0n,a=neg?-r[0]:r[0];let int=a/r[1],rest=a%r[1],dec="";
+    for(let k=0;k<30&&rest;k++){rest*=10n;dec+=rest/r[1];rest%=r[1]}
+    out(r[0]+"/"+r[1]+"\n≈ "+(neg?"-":"")+int+","+dec+(rest?"...":""))
+  }catch(e){out(e===1?"Não dá para dividir por zero.":"Não entendi a conta.")}}
+document.getElementById('n').addEventListener('keydown',e=>{if(e.key==='Enter')/^[\d\s.]+$/.test(e.target.value)?primo():conta()});
+
+function letras(){
+  const txt=document.getElementById('lt').value;
+  const sep=document.getElementById('lac').checked,zero=document.getElementById('lz').checked,ord=document.getElementById('lord').checked;
+  const c=new Map();let tot=0,vog=0;
+  for(const ch0 of txt.toUpperCase()){
+    let ch=sep?ch0:ch0.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(!/^\p{L}$/u.test(ch))continue;
+    c.set(ch,(c.get(ch)||0)+1);tot++;if('AEIOU'.includes(ch.normalize('NFD')[0]))vog++}
+  if(zero)for(const ch of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')if(!c.has(ch))c.set(ch,0);
+  let ar=[...c];ar.sort(ord?(a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]):(a,b)=>a[0].localeCompare(b[0]));
+  const mx=Math.max(1,...ar.map(a=>a[1]));
+  const palavras=(txt.match(/[\p{L}\p{N}]+/gu)||[]).length;
+  let h='<b>'+tot+' letras</b> em '+palavras+' palavras · '+vog+' vogais · '+(tot-vog)+' consoantes<table><tr><th>Letra</th><th>Quantas</th></tr>';
+  for(const [k,v] of ar)h+='<tr><td>'+k+'</td><td>'+v+'<span class="barra" style="width:'+Math.round(v/mx*160)+'px"></span></td></tr>';
+  document.getElementById('lout').innerHTML=tot?h+'</table>':'Escreva um texto primeiro.'}
+
+function aba(x){for(const k of 'NL'){document.getElementById('t'+k).hidden=k!==x;document.getElementById('b'+k).className=k===x?'on':''}}
+</script></body></html>
